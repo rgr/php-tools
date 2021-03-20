@@ -1,0 +1,14 @@
+{
+	"name": "rgr/php-tools",
+	"license": "Proprietary",
+	"version": "1.0",
+	"authors": [{
+		"name": "Raphaël Grasset",
+		"email": "raphael.grasset@hotmail.fr"
+	}],
+	"autoload": {
+		"psr-4": {
+			"rgr\\Tools\\": "src/"
+		}
+	}
+}
