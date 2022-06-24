@@ -251,13 +251,13 @@ class StatHelper
     {
         $stats = [
             'n'         => count($array),
-            'Mean'      => round($this->arithmeticMean($array), $precision),
-            'Deviation' => round($this->standardDeviation($array), $precision + 1),
-            'Min'       => Min($array),
-            'Q1'        => round($this->quantile($array, 0.25), $precision),
-            'Median'    => round($this->median($array), $precision),
-            'Q3'        => round($this->quantile($array, 0.75), $precision),
-            'Max'       => Max($array),
+            'min'       => Min($array),
+            'q1'        => round($this->quantile($array, 0.25), $precision),
+            'mean'      => round($this->arithmeticMean($array), $precision),
+            'median'    => round($this->median($array), $precision),
+            'q3'        => round($this->quantile($array, 0.75), $precision),
+            'max'       => Max($array),
+            'sd'        => round($this->standardDeviation($array), $precision + 1),
         ];
 
         return $stats;
