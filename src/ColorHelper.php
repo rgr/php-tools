@@ -1,7 +1,7 @@
 <?php
 
 
-namespace LearningRaph\Tools;
+namespace rgr\Tools;
 
 /**
 *
