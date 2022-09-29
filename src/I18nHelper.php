@@ -1,6 +1,5 @@
 <?php
 
-
 namespace rgr\Tools;
 
 /**
@@ -24,10 +23,10 @@ class I18nHelper
      */
     public function countries($language = 'en')
     {
-        $jsondata = file_get_contents('assets/i18n/' . $language . '/countries.json');
+        $jsondata = file_get_contents(dirname(dirname(__FILE__)).'/assets/i18n/'.$language.'/countries.json');
         $country = json_decode($jsondata, true);
 
-        $jsondata = file_get_contents('assets/i18n/' . $language . '/nationalities.json');
+        $jsondata = file_get_contents(dirname(dirname(__FILE__)).'/assets/i18n/'.$language.'/nationalities.json');
         $nationality = json_decode($jsondata, true);
 
         $countries = [
