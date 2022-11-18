@@ -248,7 +248,7 @@ class I18nHelper
      */
     public function languages($language = 'en')
     {
-        $jsondata = file_get_contents('assets/i18n/' . $language . '/languages.json');
+        $jsondata = file_get_contents(dirname(dirname(__FILE__)).'/assets/i18n/'.$language.'/languages.json');
         $lang = json_decode($jsondata, true);
 
         $languages = [
