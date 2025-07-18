@@ -3,6 +3,7 @@
 
 namespace rgr\Tools;
 
+use rgr\Tools\StringHelper;
 use Exception;
 
 /**
@@ -29,7 +30,7 @@ class GibberishHelper
     */
     public function train($language = 'fr')
     {
-        $string = new Str();
+        $string = new StringHelper();
         $corpusFile = 'assets/gibberish/' . $language . '/corpus_' . $language . '.txt';
         $examplesGoodFile = 'assets/gibberish/' . $language . '/examples_good_' . $language . '.txt';
         $examplesBadFile = 'assets/gibberish/' . $language . '/examples_bad_' . $language . '.txt';
