@@ -1,6 +1,5 @@
 <?php
 
-
 namespace rgr\Tools;
 
 use Exception;
@@ -29,24 +28,25 @@ class SampleHelper
     *
     * @return array
     */
-    public function extractSample($dataset, $sampleSize = null, $method = 'characteristic', $return = 'ID')
+    public static function extractSample($dataset, $sampleSize = null, $method = 'characteristic', $return = 'ID')
     {
-        $clustering = new Clustering();
-        $arr = new Arr();
-
         if ($dataset === 0 or is_null($dataset)) {
             throw new Exception('Dataset cannot be null');
         }
 
         //Suffle data set to improve randmoness
-        $dataset = $arr->shuffleAArray($dataset);
+        $dataset = ArrayHelper::shuffleAArray($dataset);
 
         if ($method == 'characteristic') {
             //Calculates the number of features to make as many clusters
-            $featuresNb = count(next($dataset));
+            $firstElement = reset($dataset);
+            if (!is_array($firstElement)) {
+                throw new Exception('Dataset must contain arrays');
+            }
+            $featuresNb = count($firstElement);
 
             //Create the clusters
-            $clusters = $clustering->kMeans($dataset, $featuresNb, null, 'IDValues');
+            $clusters = ClusteringHelper::kMeans($dataset, $featuresNb, null, 'IDValues');
 
             //Calculates how many samples to take in each cluster
             $samplesPerCluster = ceil($sampleSize / count($clusters));
@@ -108,7 +108,7 @@ class SampleHelper
     *
     * @return int
     */
-    public function sampleSize($datasetSize = null, $confidence = 1.96, $representation = 0.5, $error = 0.03, $margin = 5)
+    public static function sampleSize($datasetSize = null, $confidence = 1.96, $representation = 0.5, $error = 0.03, $margin = 5)
     {
         if ($datasetSize === 0 or is_null($datasetSize)) {
             throw new Exception('Dataset size cannot be null');

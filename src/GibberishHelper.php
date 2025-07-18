@@ -1,10 +1,9 @@
 <?php
 
-
 namespace rgr\Tools;
 
-use rgr\Tools\StringHelper;
 use Exception;
+use rgr\Tools\StringHelper;
 
 /**
  *
@@ -28,7 +27,7 @@ class GibberishHelper
     *
     * @return json
     */
-    public function train($language = 'fr')
+    public static function train($language = 'fr')
     {
         $string = new StringHelper();
         $corpusFile = 'assets/gibberish/' . $language . '/corpus_' . $language . '.txt';
@@ -89,12 +88,12 @@ class GibberishHelper
         $goodLines = file($examplesGoodFile);
         $goodProbs = [];
         foreach ($goodLines as $line) {
-            array_push($goodProbs, $this->probability($line, $logProbMatrix));
+            array_push($goodProbs, self::probability($line, $logProbMatrix));
         }
         $badLines = file($examplesBadFile);
         $badProbs = [];
         foreach ($badLines as $line) {
-            array_push($badProbs, $this->probability($line, $logProbMatrix));
+            array_push($badProbs, self::probability($line, $logProbMatrix));
         }
         // Assert that we actually are capable of detecting the junk.
         $minGoodProbs = min($goodProbs);
@@ -125,7 +124,7 @@ class GibberishHelper
     *
     * @return bool
     */
-    public function isGibberish($str, $language = 'fr')
+    public static function isGibberish($str, $language = 'fr')
     {
         $probFile = 'assets/gibberish/' . $language . '/prob_' . $language . '.json';
         if (!file_exists($probFile)) {
@@ -135,7 +134,7 @@ class GibberishHelper
         $jsondata = file_get_contents($probFile);
         $prob = json_decode($jsondata, true);
 
-        $gibberishProb = $this->probability($str, $prob['matrix']);
+        $gibberishProb = self::probability($str, $prob['matrix']);
 
         $result = false;
         if ($gibberishProb < $prob['threshold']) {
@@ -154,9 +153,9 @@ class GibberishHelper
     *
     * @return int
     */
-    private function probability($str, $matrix)
+    private static function probability($str, $matrix)
     {
-        $string = new Str();
+        $string = new StringHelper();
         $logProb = 1.0;
         $transitionCt = 0;
 

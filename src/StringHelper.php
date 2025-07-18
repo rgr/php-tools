@@ -20,7 +20,7 @@ class StringHelper
     *
     * @return string
     */
-    public function random($length = 8, $type = 'alphanumeric')
+    public static function random($length = 8, $type = 'alphanumeric')
     {
         $string = '';
 
@@ -48,7 +48,7 @@ class StringHelper
     *
     * @return string
     */
-    public function token($length = 32)
+    public static function token($length = 32)
     {
         if (!isset($length) || intval($length) <= 8) {
             $length = 32;
@@ -56,9 +56,6 @@ class StringHelper
 
         if (function_exists('random_bytes')) {
             return bin2hex(random_bytes($length));
-        }
-        if (function_exists('mcrypt_create_iv')) {
-            return bin2hex(mcrypt_create_iv($length, MCRYPT_DEV_URANDOM));
         }
         if (function_exists('openssl_random_pseudo_bytes')) {
             return bin2hex(openssl_random_pseudo_bytes($length));
@@ -73,15 +70,15 @@ class StringHelper
     *
     * @return string
     */
-    public function clean($str)
+    public static function clean($str)
     {
-        $str = $this->removeAcents($str);
+        $str = self::removeAcents($str);
 
-        $str = $this->removeUrls($str);
+        $str = self::removeUrls($str);
 
-        $str = $this->removePunctuation($str);
+        $str = self::removePunctuation($str);
 
-        $str = $this->removeAllButLetters($str);
+        $str = self::removeAllButLetters($str);
 
         return trim($str);
     }
@@ -94,19 +91,19 @@ class StringHelper
     *
     * @return string
     */
-    public function removeAcents($str)
+    public static function removeAcents($str)
     {
         $accents = [
-            'Á'=> 'A', 'À'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Å'=>'A', 'Ä'=>'A', 'Æ'=>'AE', 'Ç'=>'C',
-            'É'=> 'E', 'È'=>'E', 'Ê'=>'E', 'Ë'=>'E', 'Í'=>'I', 'Ì'=>'I', 'Î'=>'I', 'Ï'=>'I', 'Ð'=>'Eth',
-            'Ñ'=> 'N', 'Ó'=>'O', 'Ò'=>'O', 'Ô'=>'O', 'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O',
-            'Ú'=> 'U', 'Ù'=>'U', 'Û'=>'U', 'Ü'=>'U', 'Ý'=>'Y',
+            'Á' => 'A', 'À' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Å' => 'A', 'Ä' => 'A', 'Æ' => 'AE', 'Ç' => 'C',
+            'É' => 'E', 'È' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Í' => 'I', 'Ì' => 'I', 'Î' => 'I', 'Ï' => 'I', 'Ð' => 'Eth',
+            'Ñ' => 'N', 'Ó' => 'O', 'Ò' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O',
+            'Ú' => 'U', 'Ù' => 'U', 'Û' => 'U', 'Ü' => 'U', 'Ý' => 'Y',
 
-            'á'=> 'a', 'à'=>'a', 'â'=>'a', 'ã'=>'a', 'å'=>'a', 'ä'=>'a', 'æ'=>'ae', 'ç'=>'c',
-            'é'=> 'e', 'è'=>'e', 'ê'=>'e', 'ë'=>'e', 'í'=>'i', 'ì'=>'i', 'î'=>'i', 'ï'=>'i', 'ð'=>'eth',
-            'ñ'=> 'n', 'ó'=>'o', 'ò'=>'o', 'ô'=>'o', 'õ'=>'o', 'ö'=>'o', 'ø'=>'o',
-            'ú'=> 'u', 'ù'=>'u', 'û'=>'u', 'ü'=>'u', 'ý'=>'y',
-            'ß'=> 'sz', 'þ'=>'thorn', 'ÿ'=>'y', ];
+            'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'å' => 'a', 'ä' => 'a', 'æ' => 'ae', 'ç' => 'c',
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e', 'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i', 'ð' => 'eth',
+            'ñ' => 'n', 'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u', 'ý' => 'y',
+            'ß' => 'sz', 'þ' => 'thorn', 'ÿ' => 'y', ];
 
         $str = strtr($str, $accents);
 
@@ -127,7 +124,7 @@ class StringHelper
     *
     * @return string
     */
-    public function removeNumbers($str)
+    public static function removeNumbers($str)
     {
         $str = preg_replace('/[0-9]+/', ' ', $str);
 
@@ -145,9 +142,9 @@ class StringHelper
     *
     * @return string
     */
-    public function removeAllButLetters($str)
+    public static function removeAllButLetters($str)
     {
-        $str = $this->removeAcents($str);
+        $str = self::removeAcents($str);
         $str = preg_replace('/[^a-zA-Z]/i', ' ', $str);
 
         // Delete double or more whitespaces
@@ -164,7 +161,7 @@ class StringHelper
     *
     * @return string
     */
-    public function removeUrls($str)
+    public static function removeUrls($str)
     {
         $str = preg_replace('#((https?|ftp)://(\S*?\.\S*?))([\s)\[\]{},;"\':<]|\.\s|$)#i', ' ', $str);
 
@@ -182,7 +179,7 @@ class StringHelper
     *
     * @return string
     */
-    public function removePunctuation($str)
+    public static function removePunctuation($str)
     {
         $str = preg_replace('#[[:punct:]]#', '', $str);
 
@@ -201,10 +198,10 @@ class StringHelper
     *
     * @return int
     */
-    public function similarity($str1, $str2)
+    public static function similarity($str1, $str2)
     {
-        $str1 = $this->clean($str1);
-        $str2 = $this->clean($str2);
+        $str1 = self::clean($str1);
+        $str2 = self::clean($str2);
 
         $lev = round((1 - levenshtein($str1, $str2) / max(strlen($str1), strlen($str2))) * 100);
 

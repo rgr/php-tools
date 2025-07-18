@@ -1,6 +1,5 @@
 <?php
 
-
 namespace rgr\Tools;
 
 /**
@@ -20,7 +19,7 @@ class ColorHelper
     *
     * @return array
     */
-    public function hex2rgb($hex)
+    public static function hex2rgb($hex)
     {
         if (strlen($hex) == 7) {
             $hex = substr($hex, 1, 6);
@@ -43,7 +42,7 @@ class ColorHelper
     *
     * @return string
     */
-    public function rgb2hex($R, $G, $B)
+    public static function rgb2hex($R, $G, $B)
     {
         $hexR = dechex($R);
         if (strlen($hexR) < 2) {
@@ -71,7 +70,7 @@ class ColorHelper
     *
     * @return array
     */
-    public function rgb2hsv($R, $G, $B)
+    public static function rgb2hsv($R, $G, $B)
     {
         $R = ($R / 255);
         $G = ($G / 255);

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace rgr\Tools;
 
 use Exception;
@@ -23,7 +22,7 @@ class StatHelper
     *
     * @return int
     */
-    public function euclideanDistance($a, $b)
+    public static function euclideanDistance($a, $b)
     {
         if (count($a) != count($b)) {
             throw new Exception('Euclidean distance calculation impossible : data are not the same size');
@@ -48,7 +47,7 @@ class StatHelper
     *
     * @return array
     */
-    public function euclideanDistanceMatrix($dataset)
+    public static function euclideanDistanceMatrix($dataset)
     {
         $dataMatrix = [];
         $MatrixA = $dataset;
@@ -56,7 +55,7 @@ class StatHelper
 
         foreach ($MatrixA as $Akey => $Avalue) {
             foreach ($MatrixB as $Bkey => $Bvalue) {
-                $dataMatrix[$Akey][$Bkey] = $this->EuclideanDistance($Avalue, $Bvalue);
+                $dataMatrix[$Akey][$Bkey] = self::euclideanDistance($Avalue, $Bvalue);
             }
         }
 
@@ -74,22 +73,20 @@ class StatHelper
     *
     * @return array
     */
-    public function centroid($dataset, $features = null, $weight = 1.2)
+    public static function centroid($dataset, $features = null, $weight = 1.2)
     {
         $centroid = [];
         $featuresNb = count($dataset[array_rand($dataset)]);
         $n = 0;
 
-        //Initialize all the features
-        for ($i = 0; $i < $featuresNb; ++$i) {
-            ${'x' . $i} = null;
-        }
+        // Initialize feature sums array
+        $featureSums = array_fill(0, $featuresNb, 0);
 
         //Add all the features
         foreach ($dataset as $data) {
             ++$n;
             for ($i = 0, $nb = count($data); $i < $nb; ++$i) {
-                ${'x' . $i} += $data[$i];
+                $featureSums[$i] += $data[$i];
             }
         }
 
@@ -97,9 +94,9 @@ class StatHelper
         for ($i = 0; $i < $featuresNb; ++$i) {
             //If the feature is considered important, we apply a weight
             if (!is_null($features) && in_array('x' . $i, $features)) {
-                array_push($centroid, round((${'x' . $i} * $weight) / $n));
+                array_push($centroid, round(($featureSums[$i] * $weight) / $n));
             } else {
-                array_push($centroid, round(${'x' . $i} / $n));
+                array_push($centroid, round($featureSums[$i] / $n));
             }
         }
 
@@ -114,7 +111,7 @@ class StatHelper
     *
     * @return int
     */
-    public function arithmeticMean($array)
+    public static function arithmeticMean($array)
     {
         return array_sum($array) / count($array);
     }
@@ -127,8 +124,9 @@ class StatHelper
     *
     * @return int
     */
-    public function geometricMean($array)
+    public static function geometricMean($array)
     {
+        $mean = 1; // Initialize to 1 for geometric mean
         foreach ($array as $i => $n) {
             if ($i == 0) {
                 $mean = $n;
@@ -152,7 +150,7 @@ class StatHelper
     *
     * @return int
     */
-    public function harmonicMean($array)
+    public static function harmonicMean($array)
     {
         $sum = 0;
         foreach ($array as $n) {
@@ -174,9 +172,9 @@ class StatHelper
     *
     * @return int
     */
-    public function median($array)
+    public static function median($array)
     {
-        return $this->quantile($array, 0.5);
+        return self::quantile($array, 0.5);
     }
 
     /**
@@ -187,13 +185,13 @@ class StatHelper
     *
     * @return int
     */
-    public function standardDeviation($array)
+    public static function standardDeviation($array)
     {
         if (count($array) < 2) {
             return;
         }
 
-        $avg = $this->arithmeticMean($array);
+        $avg = self::arithmeticMean($array);
 
         $sum = 0;
         foreach ($array as $value) {
@@ -212,7 +210,7 @@ class StatHelper
     *
     * @return int
     */
-    public function quantile($array, $quantile = 0)
+    public static function quantile($array, $quantile = 0)
     {
         if ($quantile < 0 or $quantile > 1) {
             throw new Exception('Quantile must be between 0 and 1');
@@ -247,17 +245,17 @@ class StatHelper
     *
     * @return array
     */
-    public function describe($array, $precision = 0)
+    public static function describe($array, $precision = 0)
     {
         $stats = [
             'n'         => count($array),
-            'min'       => Min($array),
-            'q1'        => round($this->quantile($array, 0.25), $precision),
-            'mean'      => round($this->arithmeticMean($array), $precision),
-            'median'    => round($this->median($array), $precision),
-            'q3'        => round($this->quantile($array, 0.75), $precision),
-            'max'       => Max($array),
-            'sd'        => round($this->standardDeviation($array), $precision + 1),
+            'min'       => min($array),
+            'q1'        => round(self::quantile($array, 0.25), $precision),
+            'mean'      => round(self::arithmeticMean($array), $precision),
+            'median'    => round(self::median($array), $precision),
+            'q3'        => round(self::quantile($array, 0.75), $precision),
+            'max'       => max($array),
+            'sd'        => round(self::standardDeviation($array), $precision + 1),
         ];
 
         return $stats;
@@ -274,7 +272,7 @@ class StatHelper
     *
     * @return int A percentage if $n is not null, a number overwise
     */
-    public function inBetween($array, $min, $max, $n = null)
+    public static function inBetween($array, $min, $max, $n = null)
     {
         $total = [];
         foreach ($array as $value) {
@@ -299,7 +297,7 @@ class StatHelper
     *
     * @return array Array of percentage
     */
-    public function toPercent($array)
+    public static function toPercent($array)
     {
         $arrayNb = array_sum($array);
 
@@ -326,8 +324,37 @@ class StatHelper
     *
     * @return int
     */
-    public function likertConvert($score, $inMin = 1, $inMax = 5, $outMin = 1, $outMax = 4)
+    public static function likertConvert($score, $inMin = 1, $inMax = 5, $outMin = 1, $outMax = 4)
     {
         return ($outMax - $outMin) * ($score - $inMin) / ($inMax - $inMin) + $outMin;
+    }
+
+    /**
+     * Compute a Z-score based on mean and standard deviation.
+     *
+     * The Z-score is a measure of how many standard deviations
+     * a value is from the mean and can be interpreted as follows:
+     * - 0   → The value is extremely deviant from the neutral position.
+     * - 50  → The value is close to the expected average.
+     * - 100 → The value is highly extreme in the measured attribute.
+     *
+     * @param float $mean The mean of the distribution
+     * @param float $stdDev The standard deviation of the distribution
+     *
+     * @return int
+     */
+    public static function computeZScore($mean, $stdDev)
+    {
+        if ($stdDev == 0) {
+            return 50; // Default to neutral if no variance
+        }
+
+        // Compute Z-score with smooth scaling
+        $zScore = ($mean - 50) / ($stdDev + 1); // Prevent division by zero
+
+        // Use atan to cap extreme values and normalize
+        $normalizedScore = 50 + (atan($zScore) * (100 / M_PI)); // Scale to 0-100
+
+        return round(max(0, min(100, $normalizedScore)));
     }
 }

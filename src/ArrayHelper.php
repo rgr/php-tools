@@ -17,9 +17,9 @@ class ArrayHelper
     *
     * @param array $array An associative array
     *
-    * @return string
+    * @return array
     */
-    public function shuffleAArray($array)
+    public static function shuffleAArray($array)
     {
         $keys = array_keys($array);
         shuffle($keys);
@@ -36,13 +36,13 @@ class ArrayHelper
     *
     * Sorts an associative array by key and reinitializes the keys
     *
-    * @param string $array Associative array to sort
+    * @param array $array Associative array to sort
     * @param string $sortKey Key to use for sorting
-    * @param arg $order Order in which the array has to be sorted ('SORT_DESC', 'SORT_ASC')
+    * @param int $order Order in which the array has to be sorted ('SORT_DESC', 'SORT_ASC')
     *
     * @return array
     */
-    public function sortAArray($array, $sortKey, $order = SORT_DESC)
+    public static function sortAArray($array, $sortKey, $order = SORT_DESC)
     {
         foreach ($array as $key => $row) {
             $sort[$key] = $row[$sortKey];
@@ -62,7 +62,7 @@ class ArrayHelper
     *
     * @return array
     */
-    public function numericalIndex($dataset, $features = null)
+    public static function numericalIndex($dataset, $features = null)
     {
         $featuresNb = count(next($dataset));
         $arrayIndex = [];

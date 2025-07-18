@@ -21,7 +21,7 @@ class I18nHelper
      *
      * @return array
      */
-    public function countries($language = 'en')
+    public static function countries($language = 'en')
     {
         $jsondata = file_get_contents(dirname(dirname(__FILE__)).'/assets/i18n/'.$language.'/countries.json');
         $country = json_decode($jsondata, true);
@@ -246,7 +246,7 @@ class I18nHelper
      *
      * @return array
      */
-    public function languages($language = 'en')
+    public static function languages($language = 'en')
     {
         $jsondata = file_get_contents(dirname(dirname(__FILE__)).'/assets/i18n/'.$language.'/languages.json');
         $lang = json_decode($jsondata, true);

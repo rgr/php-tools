@@ -1,6 +1,5 @@
 <?php
 
-
 namespace rgr\Tools;
 
 use Exception;
@@ -30,7 +29,7 @@ class ClusteringHelper
     *
     * @return array
     */
-    public function kMeans($dataset, $k = 2, $features = null, $return = 'IDValues')
+    public static function kMeans($dataset, $k = 2, $features = null, $return = 'IDValues')
     {
         //Data check
         if (count($dataset) === 0 or is_null($dataset)) {
@@ -48,27 +47,27 @@ class ClusteringHelper
             // With smaller dataset, using the Diagonal initialization technique is more accurate and quicker
             // It will calculate the path that cross all dimensions diagonally and align at equal distance all
             // the centroids to maximize the covered surface and distance between each of them.
-            $centroids = $this->initializeCentroidsDiagonal($dataset, $k);
+            $centroids = self::initializeCentroidsDiagonal($dataset, $k);
         } else {
             // With bigger dataset, we can use random initialization for good and quick results
             // It will initialize the centroids at the coordinates of some randomly chosen data coordinates from the set.
-            $centroids = $this->initializeCentroidsRandom($dataset, $k);
+            $centroids = self::initializeCentroidsRandom($dataset, $k);
         }
         $mapping = [];
 
         while (true) {
             //Assign centroids
-            $newMapping = $this->assignCentroids($dataset, $centroids);
+            $newMapping = self::assignCentroids($dataset, $centroids);
 
             //If no data has moved to another centroid that means the clusters are found
             if ($mapping != $newMapping) {
                 $mapping = $newMapping;
             } else {
-                return $this->kMeansFormatResults($newMapping, $return);
+                return self::kMeansFormatResults($newMapping, $return);
             }
 
             //Move centroids
-            $centroids = $this->moveCentroids($mapping, $features);
+            $centroids = self::moveCentroids($mapping, $features);
         }
     }
 
@@ -81,7 +80,7 @@ class ClusteringHelper
     *
     * @return array
     */
-    private function initializeCentroidsDiagonal($dataset, $k)
+    private static function initializeCentroidsDiagonal($dataset, $k)
     {
         $centroids = [];
         $featuresNb = count($dataset[array_rand($dataset)]);
@@ -130,7 +129,7 @@ class ClusteringHelper
     *
     * @return array
     */
-    private function initializeCentroidsRandom($dataset, $k)
+    private static function initializeCentroidsRandom($dataset, $k)
     {
         $centroids = [];
 
@@ -153,10 +152,8 @@ class ClusteringHelper
     *
     * @return array
     */
-    private function assignCentroids($dataset, $centroids)
+    private static function assignCentroids($dataset, $centroids)
     {
-        $stat = new Stat();
-
         $map = [];
 
         foreach ($dataset as $dataID => $datavalue) {
@@ -165,7 +162,7 @@ class ClusteringHelper
 
             foreach ($centroids as $centroidID => $centroidvalue) {
                 //Distance between the data and the centroid
-                $dist = $stat->euclideanDistance($datavalue, $centroidvalue);
+                $dist = StatHelper::euclideanDistance($datavalue, $centroidvalue);
                 //If it's closer we save the centroid ID
                 if ($minDistance == null or $dist < $minDistance) {
                     $minDistance = $dist;
@@ -187,15 +184,13 @@ class ClusteringHelper
     *
     * @return array
     */
-    private function moveCentroids($mapping, $features)
+    private static function moveCentroids($mapping, $features)
     {
-        $stat = new Stat();
-
         $centroids = [];
 
         foreach ($mapping as $centroidID => $data) {
             //Set centroid new coordinates
-            $centroids[$centroidID] = $stat->centroid($data, $features);
+            $centroids[$centroidID] = StatHelper::centroid($data, $features);
         }
 
         return $centroids;
@@ -210,7 +205,7 @@ class ClusteringHelper
     *
     * @return array
     */
-    private function kMeansFormatResults($mapping, $return)
+    private static function kMeansFormatResults($mapping, $return)
     {
         $cluster = [];
 
