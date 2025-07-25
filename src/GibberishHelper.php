@@ -19,6 +19,67 @@ class GibberishHelper
     protected static $accepted = 'abcdefghijklmnopqrstuvwxyz ';
 
     /**
+     * Get the base directory for assets
+     *
+     * @return string
+     */
+    private static function getAssetsBasePath()
+    {
+        // Try to find the project root by looking for composer.json
+        $currentDir = __DIR__;
+        $maxDepth = 10; // Prevent infinite loops
+
+        for ($i = 0; $i < $maxDepth; $i++) {
+            if (file_exists($currentDir . '/composer.json')) {
+                return $currentDir . '/assets/gibberish/';
+            }
+            $parentDir = dirname($currentDir);
+            if ($parentDir === $currentDir) {
+                break; // Reached filesystem root
+            }
+            $currentDir = $parentDir;
+        }
+
+        // Fallback to relative path from current directory
+        return 'assets/gibberish/';
+    }
+
+    /**
+     * Validate and get file path with proper error handling
+     *
+     * @param string $language
+     * @param string $fileType
+     * @return string
+     * @throws Exception
+     */
+    private static function getFilePath($language, $fileType)
+    {
+        $basePath = self::getAssetsBasePath();
+        $languageDir = $basePath . $language . '/';
+
+        // Validate language directory exists
+        if (!is_dir($languageDir)) {
+            throw new Exception("Language directory not found: {$language}");
+        }
+
+        $filePath = $languageDir . $fileType . '_' . $language . '.txt';
+
+        if ($fileType === 'prob') {
+            $filePath = $languageDir . $fileType . '_' . $language . '.json';
+        }
+
+        if (!file_exists($filePath)) {
+            throw new Exception("File not found: {$filePath}");
+        }
+
+        if (!is_readable($filePath)) {
+            throw new Exception("File not readable: {$filePath}");
+        }
+
+        return $filePath;
+    }
+
+    /**
     *
     * Computes probability matrix of letters following others in a given language using markov chains
     *
@@ -30,18 +91,19 @@ class GibberishHelper
     public static function train($language = 'fr')
     {
         $string = new StringHelper();
-        $corpusFile = 'assets/gibberish/' . $language . '/corpus_' . $language . '.txt';
-        $examplesGoodFile = 'assets/gibberish/' . $language . '/examples_good_' . $language . '.txt';
-        $examplesBadFile = 'assets/gibberish/' . $language . '/examples_bad_' . $language . '.txt';
 
-        if (!file_exists($corpusFile)) {
-            throw new Exception('Corpus file not found (' . $language . ').');
+        // Validate language parameter
+        if (!is_string($language) || strlen($language) !== 2) {
+            throw new Exception('Language must be a 2-character ISO code.');
         }
-        if (!file_exists($examplesGoodFile)) {
-            throw new Exception('Good examples file not found (' . $language . ').');
-        }
-        if (!file_exists($examplesBadFile)) {
-            throw new Exception('Bad examples file not found (' . $language . ').');
+
+        // Get file paths with proper validation
+        try {
+            $corpusFile = self::getFilePath($language, 'corpus');
+            $examplesGoodFile = self::getFilePath($language, 'examples_good');
+            $examplesBadFile = self::getFilePath($language, 'examples_bad');
+        } catch (Exception $e) {
+            throw new Exception('File access error: ' . $e->getMessage());
         }
 
         // Initialize probability matrix
@@ -62,6 +124,10 @@ class GibberishHelper
 
         // Count number of transition from corpus
         $lines = file($corpusFile);
+        if ($lines === false) {
+            throw new Exception('Failed to read corpus file: ' . $corpusFile);
+        }
+
         foreach ($lines as $line) {
             // Return all n grams from l after normalizing
             $filteredLine = str_split(strtolower($string->clean($line)));
@@ -86,15 +152,25 @@ class GibberishHelper
 
         // Find the probability of generating a few arbitrarily choosen good and bad phrases.
         $goodLines = file($examplesGoodFile);
+        if ($goodLines === false) {
+            throw new Exception('Failed to read good examples file: ' . $examplesGoodFile);
+        }
+
         $goodProbs = [];
         foreach ($goodLines as $line) {
             array_push($goodProbs, self::probability($line, $logProbMatrix));
         }
+
         $badLines = file($examplesBadFile);
+        if ($badLines === false) {
+            throw new Exception('Failed to read bad examples file: ' . $examplesBadFile);
+        }
+
         $badProbs = [];
         foreach ($badLines as $line) {
             array_push($badProbs, self::probability($line, $logProbMatrix));
         }
+
         // Assert that we actually are capable of detecting the junk.
         $minGoodProbs = min($goodProbs);
         $maxBadProbs = max($badProbs);
@@ -109,10 +185,29 @@ class GibberishHelper
         // save matrix
         $result = [
             'threshold' => $threshold,
-            'matrix'    => $logProbMatrix, ];
-        $fp = fopen('assets/gibberish/' . $language . '/prob_' . $language . '.json', 'w');
-        fwrite($fp, json_encode($result));
+            'matrix'    => $logProbMatrix,
+        ];
+
+        $outputFile = dirname($corpusFile) . '/prob_' . $language . '.json';
+        $fp = fopen($outputFile, 'w');
+        if ($fp === false) {
+            throw new Exception('Failed to create output file: ' . $outputFile);
+        }
+
+        $jsonResult = json_encode($result);
+        if ($jsonResult === false) {
+            fclose($fp);
+            throw new Exception('Failed to encode JSON result');
+        }
+
+        $writeResult = fwrite($fp, $jsonResult);
         fclose($fp);
+
+        if ($writeResult === false) {
+            throw new Exception('Failed to write to output file: ' . $outputFile);
+        }
+
+        return $result;
     }
 
     /**
@@ -126,13 +221,34 @@ class GibberishHelper
     */
     public static function isGibberish($str, $language = 'fr')
     {
-        $probFile = 'assets/gibberish/' . $language . '/prob_' . $language . '.json';
-        if (!file_exists($probFile)) {
-            throw new Exception('Probability file not found (' . $language . ').');
+        // Validate input parameters
+        if (!is_string($str)) {
+            throw new Exception('Input string must be a string.');
+        }
+
+        if (!is_string($language) || strlen($language) !== 2) {
+            throw new Exception('Language must be a 2-character ISO code.');
+        }
+
+        try {
+            $probFile = self::getFilePath($language, 'prob');
+        } catch (Exception $e) {
+            throw new Exception('Probability file access error: ' . $e->getMessage());
         }
 
         $jsondata = file_get_contents($probFile);
+        if ($jsondata === false) {
+            throw new Exception('Failed to read probability file: ' . $probFile);
+        }
+
         $prob = json_decode($jsondata, true);
+        if ($prob === null) {
+            throw new Exception('Failed to decode JSON from probability file: ' . $probFile);
+        }
+
+        if (!isset($prob['matrix']) || !isset($prob['threshold'])) {
+            throw new Exception('Invalid probability file format: missing matrix or threshold');
+        }
 
         $gibberishProb = self::probability($str, $prob['matrix']);
 

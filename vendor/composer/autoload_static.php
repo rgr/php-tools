@@ -7,28 +7,21 @@ namespace Composer\Autoload;
 class ComposerStaticInit29209aec4ce413d83cce8833abe7087c
 {
     public static $prefixLengthsPsr4 = array (
-        'T' => 
+        'r' => 
         array (
-            'Tools\\' => 6,
+            'rgr\\Tools\\' => 10,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Tools\\' => 
+        'rgr\\Tools\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
     );
 
     public static $classMap = array (
-        'Tools\\Arr' => __DIR__ . '/../..' . '/src/Array.php',
-        'Tools\\Clustering' => __DIR__ . '/../..' . '/src/Clustering.php',
-        'Tools\\Color' => __DIR__ . '/../..' . '/src/Color.php',
-        'Tools\\Gibberish' => __DIR__ . '/../..' . '/src/Gibberish.php',
-        'Tools\\I18n' => __DIR__ . '/../..' . '/src/I18n.php',
-        'Tools\\Sampling' => __DIR__ . '/../..' . '/src/Sample.php',
-        'Tools\\Stat' => __DIR__ . '/../..' . '/src/Stat.php',
-        'Tools\\Str' => __DIR__ . '/../..' . '/src/String.php',
+        'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
