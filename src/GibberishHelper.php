@@ -19,76 +19,16 @@ class GibberishHelper
     protected static $accepted = 'abcdefghijklmnopqrstuvwxyz ';
 
     /**
-     * Get the base directory for assets
-     *
-     * @return string
-     */
-    private static function getAssetsBasePath()
-    {
-        // Try to find the project root by looking for composer.json
-        $currentDir = __DIR__;
-        $maxDepth = 10; // Prevent infinite loops
-
-        for ($i = 0; $i < $maxDepth; $i++) {
-            if (file_exists($currentDir . '/composer.json')) {
-                return $currentDir . '/assets/gibberish/';
-            }
-            $parentDir = dirname($currentDir);
-            if ($parentDir === $currentDir) {
-                break; // Reached filesystem root
-            }
-            $currentDir = $parentDir;
-        }
-
-        // Fallback to relative path from current directory
-        return 'assets/gibberish/';
-    }
-
-    /**
-     * Validate and get file path with proper error handling
-     *
-     * @param string $language
-     * @param string $fileType
-     * @return string
-     * @throws Exception
-     */
-    private static function getFilePath($language, $fileType)
-    {
-        $basePath = self::getAssetsBasePath();
-        $languageDir = $basePath . $language . '/';
-
-        // Validate language directory exists
-        if (!is_dir($languageDir)) {
-            throw new Exception("Language directory not found: {$language}");
-        }
-
-        $filePath = $languageDir . $fileType . '_' . $language . '.txt';
-
-        if ($fileType === 'prob') {
-            $filePath = $languageDir . $fileType . '_' . $language . '.json';
-        }
-
-        if (!file_exists($filePath)) {
-            throw new Exception("File not found: {$filePath}");
-        }
-
-        if (!is_readable($filePath)) {
-            throw new Exception("File not readable: {$filePath}");
-        }
-
-        return $filePath;
-    }
-
-    /**
     *
     * Computes probability matrix of letters following others in a given language using markov chains
     *
     * @param string $language ISO-2 representation of language to train
     *                         Must have the valid files in the language directory
+    * @param bool $force Force training even if the probability file already exists
     *
     * @return json
     */
-    public static function train($language = 'fr')
+    public static function train($language = 'fr', $force = false)
     {
         $string = new StringHelper();
 
@@ -106,9 +46,16 @@ class GibberishHelper
             throw new Exception('File access error: ' . $e->getMessage());
         }
 
+        // Check if probability file already exists
+        $outputFile = dirname($corpusFile) . '/prob_' . $language . '.json';
+        if (file_exists($outputFile) && !$force) {
+            // Return existing probability data
+            return self::loadProbabilityData($language);
+        }
+
         // Initialize probability matrix
         // Assumes each pair has been seen at least 10 times so the probability
-        // of being gibberish won't be 0 if we meet an unobserved characgter.
+        // of being gibberish won't be 0 if we meet an unobserved character.
         $k = strlen(self::$accepted);
         $pos = array_flip(str_split(self::$accepted));
 
@@ -230,26 +177,7 @@ class GibberishHelper
             throw new Exception('Language must be a 2-character ISO code.');
         }
 
-        try {
-            $probFile = self::getFilePath($language, 'prob');
-        } catch (Exception $e) {
-            throw new Exception('Probability file access error: ' . $e->getMessage());
-        }
-
-        $jsondata = file_get_contents($probFile);
-        if ($jsondata === false) {
-            throw new Exception('Failed to read probability file: ' . $probFile);
-        }
-
-        $prob = json_decode($jsondata, true);
-        if ($prob === null) {
-            throw new Exception('Failed to decode JSON from probability file: ' . $probFile);
-        }
-
-        if (!isset($prob['matrix']) || !isset($prob['threshold'])) {
-            throw new Exception('Invalid probability file format: missing matrix or threshold');
-        }
-
+        $prob = self::loadProbabilityData($language);
         $gibberishProb = self::probability($str, $prob['matrix']);
 
         $result = false;
@@ -288,5 +216,99 @@ class GibberishHelper
         }
         // The exponentiation translates from log probs to probs.
         return exp($logProb / max($transitionCt, 1));
+    }
+
+    /**
+    *
+    * Loads probability data from file for a given language
+    *
+    * @param string $language ISO-2 representation of language
+    *
+    * @return array
+    */
+    private static function loadProbabilityData($language)
+    {
+        try {
+            $probFile = self::getFilePath($language, 'prob');
+        } catch (Exception $e) {
+            throw new Exception('Probability file access error: ' . $e->getMessage());
+        }
+
+        $jsondata = file_get_contents($probFile);
+        if ($jsondata === false) {
+            throw new Exception('Failed to read probability file: ' . $probFile);
+        }
+
+        $prob = json_decode($jsondata, true);
+        if ($prob === null) {
+            throw new Exception('Failed to decode JSON from probability file: ' . $probFile);
+        }
+
+        if (!isset($prob['matrix']) || !isset($prob['threshold'])) {
+            throw new Exception('Invalid probability file format: missing matrix or threshold');
+        }
+
+        return $prob;
+    }
+
+    /**
+     * Get the base directory for assets
+     *
+     * @return string
+     */
+    private static function getAssetsBasePath()
+    {
+        // Try to find the project root by looking for composer.json
+        $currentDir = __DIR__;
+        $maxDepth = 10; // Prevent infinite loops
+
+        for ($i = 0; $i < $maxDepth; $i++) {
+            if (file_exists($currentDir . '/composer.json')) {
+                return $currentDir . '/assets/gibberish/';
+            }
+            $parentDir = dirname($currentDir);
+            if ($parentDir === $currentDir) {
+                break; // Reached filesystem root
+            }
+            $currentDir = $parentDir;
+        }
+
+        // Fallback to relative path from current directory
+        return 'assets/gibberish/';
+    }
+
+    /**
+     * Validate and get file path with proper error handling
+     *
+     * @param string $language
+     * @param string $fileType
+     * @return string
+     * @throws Exception
+     */
+    private static function getFilePath($language, $fileType)
+    {
+        $basePath = self::getAssetsBasePath();
+        $languageDir = $basePath . $language . '/';
+
+        // Validate language directory exists
+        if (!is_dir($languageDir)) {
+            throw new Exception("Language directory not found: {$language}");
+        }
+
+        $filePath = $languageDir . $fileType . '_' . $language . '.txt';
+
+        if ($fileType === 'prob') {
+            $filePath = $languageDir . $fileType . '_' . $language . '.json';
+        }
+
+        if (!file_exists($filePath)) {
+            throw new Exception("File not found: {$filePath}");
+        }
+
+        if (!is_readable($filePath)) {
+            throw new Exception("File not readable: {$filePath}");
+        }
+
+        return $filePath;
     }
 }
